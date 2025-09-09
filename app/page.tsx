@@ -3,15 +3,13 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { Code2, Sparkles, Zap, Shield, ArrowRight, Github, Linkedin } from "lucide-react"
+import { Code2, Sparkles, Zap, ArrowRight, Github, Linkedin } from "lucide-react"
 
 export default function AICodeEvolver() {
-  const [apiKey, setApiKey] = useState("")
+  const apiKey = "AIzaSyAvSu5-5RGWOBR0LT2p_79v0cZxxThGR-M"
   const [userCode, setUserCode] = useState(`def reverse_function(s):
     reversed_s = ""
     for char in s:
@@ -26,7 +24,7 @@ export default function AICodeEvolver() {
   }
 
   const getLlmSuggestion = async (apiKey: string, userCode: string) => {
-    const model = "gemini-1.5-flash-latest"
+    const model = "gemini-2.0-flash-thinking-exp"
     const apiURL = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
     const prompt = createPrompt(userCode)
     const payload = {
@@ -71,10 +69,6 @@ export default function AICodeEvolver() {
   }
 
   const handleEvolveClick = async () => {
-    if (!apiKey.trim()) {
-      setStatus("Please enter your API key")
-      return
-    }
     if (!userCode.trim()) {
       setStatus("Please enter code to evolve")
       return
@@ -144,30 +138,6 @@ export default function AICodeEvolver() {
       {/* Main Application */}
       <section className="pb-16 px-4">
         <div className="container mx-auto max-w-7xl">
-          {/* API Key Input */}
-          <Card className="mb-8 max-w-md mx-auto">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="w-5 h-5" />
-                API Configuration
-              </CardTitle>
-              <CardDescription>Enter your Google AI Studio API key to get started</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <Label htmlFor="apiKey">Google AI Studio API Key</Label>
-                <Input
-                  id="apiKey"
-                  type="password"
-                  placeholder="Enter your API key..."
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  className="font-mono"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Code Evolution Interface */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
             {/* Input Code */}
