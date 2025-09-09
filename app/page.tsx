@@ -514,33 +514,18 @@ ${codeString}
                       <div className="flex flex-col gap-3 p-4 bg-muted/50 rounded-lg">
                         <div className="flex items-center gap-2">
                           <Clock className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-sm font-medium">Runtime/1000</span>
+                          <span className="text-sm font-medium">Runtime/1000 inputs</span>
                         </div>
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground w-12 flex-shrink-0">Orig:</span>
-                            <Badge
-                              variant="outline"
-                              className="text-xs font-mono flex-1 truncate"
-                              title={comparison.original.runtimePer1000}
-                            >
-                              {comparison.original.runtimePer1000.length > 12
-                                ? comparison.original.runtimePer1000.substring(0, 12) + "..."
-                                : comparison.original.runtimePer1000}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground w-12 flex-shrink-0">Evol:</span>
-                            <Badge
-                              variant="default"
-                              className="text-xs font-mono flex-1 truncate"
-                              title={comparison.evolved.runtimePer1000}
-                            >
-                              {comparison.evolved.runtimePer1000.length > 12
-                                ? comparison.evolved.runtimePer1000.substring(0, 12) + "..."
-                                : comparison.evolved.runtimePer1000}
-                            </Badge>
-                          </div>
+                        <div className="flex items-center justify-center gap-2">
+                          <Badge variant="outline" className="text-xs font-mono">
+                            {comparison.original.runtimePer1000.replace(/~|milliseconds.*|ms.*/, "").trim() ||
+                              comparison.original.runtimePer1000}
+                          </Badge>
+                          <ArrowRight className="w-3 h-3 text-muted-foreground" />
+                          <Badge variant="default" className="text-xs font-mono">
+                            {comparison.evolved.runtimePer1000.replace(/~|milliseconds.*|ms.*/, "").trim() ||
+                              comparison.evolved.runtimePer1000}
+                          </Badge>
                         </div>
                       </div>
                     </div>
