@@ -311,105 +311,76 @@ export default function AICodeEvolver() {
             <p className="text-muted-foreground font-medium">{status}</p>
           </div>
 
-          {/* Code Comparison & Improvements */}
-          {comparison && (
-            <div className="mt-12">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5" />
-                    Code Comparison & Improvements
-                  </CardTitle>
-                  <CardDescription>Analysis of your original code vs. AI-evolved version</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Metrics Comparison */}
-                    <div className="space-y-4">
-                      <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                        Code Metrics
-                      </h4>
-
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                          <div className="flex items-center gap-2">
-                            <FileText className="w-4 h-4 text-muted-foreground" />
-                            <span className="text-sm">Lines of Code</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-xs">
-                              {comparison.original.lines}
-                            </Badge>
-                            <ArrowRight className="w-3 h-3 text-muted-foreground" />
-                            <Badge variant="default" className="text-xs">
-                              {comparison.evolved.lines}
-                            </Badge>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                          <div className="flex items-center gap-2">
-                            <Zap className="w-4 h-4 text-muted-foreground" />
-                            <span className="text-sm">Complexity</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-xs">
-                              {comparison.original.complexity}
-                            </Badge>
-                            <ArrowRight className="w-3 h-3 text-muted-foreground" />
-                            <Badge variant="default" className="text-xs">
-                              {comparison.evolved.complexity}
-                            </Badge>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                          <div className="flex items-center gap-2">
-                            <Clock className="w-4 h-4 text-muted-foreground" />
-                            <span className="text-sm">Readability</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-xs">
-                              {comparison.original.readability}
-                            </Badge>
-                            <ArrowRight className="w-3 h-3 text-muted-foreground" />
-                            <Badge variant="default" className="text-xs">
-                              {comparison.evolved.readability}
-                            </Badge>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                          <div className="flex items-center gap-2">
-                            <Activity className="w-4 h-4 text-muted-foreground" />
-                            <span className="text-sm">Time Complexity</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-xs font-mono">
-                              {comparison.original.bigO}
-                            </Badge>
-                            <ArrowRight className="w-3 h-3 text-muted-foreground" />
-                            <Badge variant="default" className="text-xs font-mono">
-                              {comparison.evolved.bigO}
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Improvements List */}
-                    <div className="md:col-span-2 space-y-4">
+          {/* Key Improvements Section */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
                       <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
                         Key Improvements
                       </h4>
-                      <div className="space-y-2">
-                        {comparison.improvements.map((improvement, index) => (
-                          <div key={index} className="flex items-start gap-3 p-3 bg-accent/10 rounded-lg">
-                            <CheckCircle className="w-4 h-4 text-accent mt-0.5 flex-shrink-0" />
-                            <span className="text-sm text-foreground">{improvement}</span>
+                      <Badge variant="secondary" className="text-xs">
+                        {comparison.improvements.length} Enhancement{comparison.improvements.length !== 1 ? "s" : ""}
+                      </Badge>
+                    </div>
+
+                    <div className="grid gap-4">
+                      {comparison.improvements.map((improvement, index) => (
+                        <div
+                          key={index}
+                          className="group relative overflow-hidden rounded-lg border bg-card p-4 transition-all hover:shadow-md"
+                        >
+                          <div className="flex items-start gap-4">
+                            <div className="flex-shrink-0">
+                              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10 text-lg">
+                                {improvement.icon}
+                              </div>
+                            </div>
+
+                            <div className="flex-1 space-y-2">
+                              <div className="flex items-center gap-2">
+                                <h5 className="font-semibold text-sm text-foreground">{improvement.title}</h5>
+                                <Badge
+                                  variant={
+                                    improvement.impact === "High"
+                                      ? "default"
+                                      : improvement.impact === "Medium"
+                                        ? "secondary"
+                                        : "outline"
+                                  }
+                                  className="text-xs"
+                                >
+                                  {improvement.impact} Impact
+                                </Badge>
+                              </div>
+
+                              <p className="text-sm text-muted-foreground leading-relaxed">{improvement.description}</p>
+
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="text-xs font-medium">
+                                  {improvement.category}
+                                </Badge>
+                                <div className="flex-1 h-px bg-border"></div>
+                                <CheckCircle className="w-4 h-4 text-green-500" />
+                              </div>
+                            </div>
                           </div>
-                        ))}
+
+                          {/* Subtle gradient overlay for visual appeal */}
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Summary stats */}
+                    <div className="mt-6 p-4 bg-accent/5 rounded-lg border border-accent/20">
+                      <div className="flex items-center gap-2 mb-2">
+                        <TrendingUp className="w-4 h-4 text-accent" />
+                        <span className="text-sm font-medium text-accent">Optimization Summary</span>
                       </div>
+                      <p className="text-xs text-muted-foreground">
+                        Your code has been enhanced across {comparison.improvements.length} key area
+                        {comparison.improvements.length !== 1 ? "s" : ""}, focusing on performance, maintainability, and
+                        Python best practices.
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -418,7 +389,6 @@ export default function AICodeEvolver() {
           )}
         </div>
       </section>
-
       <Separator className="my-16" />
 
       {/* Footer */}
