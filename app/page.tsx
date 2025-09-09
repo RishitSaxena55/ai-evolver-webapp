@@ -14,13 +14,13 @@ import {
   Github,
   Linkedin,
   Clock,
-  FileText,
+  MemoryStick,
   TrendingUp,
   CheckCircle,
   Activity,
 } from "lucide-react"
 
-export default function AICodeEvolver() {
+export default function Page() {
   const apiKey = "AIzaSyAvSu5-5RGWOBR0LT2p_79v0cZxxThGR-M"
   const [userCode, setUserCode] = useState(`def reverse_function(s):
     reversed_s = ""
@@ -31,91 +31,172 @@ export default function AICodeEvolver() {
   const [isLoading, setIsLoading] = useState(false)
   const [status, setStatus] = useState("Ready to evolve your code")
   const [comparison, setComparison] = useState<{
-    original: { lines: number; complexity: string; readability: string; bigO: string }
-    evolved: { lines: number; complexity: string; readability: string; bigO: string }
-    improvements: string[]
+    original: { timeComplexity: string; spaceComplexity: string; runtimePer1000: string }
+    evolved: { timeComplexity: string; spaceComplexity: string; runtimePer1000: string }
+    improvements: {
+      category: string
+      title: string
+      description: string
+      impact: string
+      icon: string
+    }[]
   } | null>(null)
 
-  const analyzeBigO = (code: string): string => {
+  const analyzeComplexity = (code: string) => {
     const codeLines = code.toLowerCase()
 
-    // Check for nested loops
-    const nestedLoopPattern = /for\s+.*:\s*[\s\S]*?for\s+.*:|while\s+.*:\s*[\s\S]*?while\s+.*:/
-    if (nestedLoopPattern.test(codeLines)) {
-      return "O(n²)"
+    // Analyze time complexity
+    let timeComplexity = "O(1)"
+    if (/for\s+.*:\s*[\s\S]*?for\s+.*:|while\s+.*:\s*[\s\S]*?while\s+.*:/.test(codeLines)) {
+      timeComplexity = "O(n²)"
+    } else if (/for\s+.*:\s*[\s\S]*?for\s+.*:\s*[\s\S]*?for\s+.*:/.test(codeLines)) {
+      timeComplexity = "O(n³)"
+    } else if (/for\s+.*:|while\s+.*:/.test(codeLines)) {
+      timeComplexity = "O(n)"
+    } else if (/\.sort\(|sorted\(/.test(codeLines)) {
+      timeComplexity = "O(n log n)"
+    } else if (/\.reverse\(|reversed\(|\[::-1\]|\.join\(/.test(codeLines)) {
+      timeComplexity = "O(n)"
     }
 
-    // Check for triple nested structures
-    const tripleNestedPattern = /for\s+.*:\s*[\s\S]*?for\s+.*:\s*[\s\S]*?for\s+.*:/
-    if (tripleNestedPattern.test(codeLines)) {
-      return "O(n³)"
+    // Analyze space complexity
+    let spaceComplexity = "O(1)"
+    if (codeLines.includes('reversed_s = ""') || codeLines.includes("result = []")) {
+      spaceComplexity = "O(n)"
+    } else if (/list\(|\.copy\(|\[::-1\]/.test(codeLines)) {
+      spaceComplexity = "O(n)"
+    } else if (/reversed\(/.test(codeLines) && !codeLines.includes("list(")) {
+      spaceComplexity = "O(1)"
     }
 
-    // Check for single loops
-    if (/for\s+.*:|while\s+.*:/.test(codeLines)) {
-      return "O(n)"
+    // Estimate runtime per 1000 inputs (rough estimates in milliseconds)
+    let runtimePer1000 = "~1ms"
+    if (timeComplexity === "O(n²)") {
+      runtimePer1000 = "~100ms"
+    } else if (timeComplexity === "O(n³)") {
+      runtimePer1000 = "~1000ms"
+    } else if (timeComplexity === "O(n log n)") {
+      runtimePer1000 = "~10ms"
+    } else if (timeComplexity === "O(n)") {
+      runtimePer1000 = codeLines.includes("reversed(") || codeLines.includes("[::-1]") ? "~2ms" : "~5ms"
     }
 
-    // Check for recursive patterns
-    if (
-      codeLines.includes("def ") &&
-      new RegExp(codeLines.match(/def\s+(\w+)/)?.[1] || "").test(codeLines.slice(codeLines.indexOf("def")))
-    ) {
-      return "O(n)"
-    }
-
-    // Check for built-in operations
-    if (/\.sort\(|sorted\(/.test(codeLines)) {
-      return "O(n log n)"
-    }
-
-    if (/\.reverse\(|reversed\(|\[::-1\]|\.join\(/.test(codeLines)) {
-      return "O(n)"
-    }
-
-    // Default to constant time for simple operations
-    return "O(1)"
-  }
-
-  const analyzeCode = (code: string) => {
-    const lines = code.trim().split("\n").length
-    const hasLoops = /for\s+|while\s+/.test(code)
-    const hasNestedStructures = code.split("\n").some((line) => line.match(/^\s{4,}/))
-    const hasBuiltins = /\.join\(|\.reverse\(|reversed\(|list\(/.test(code)
-    const bigO = analyzeBigO(code)
-
-    let complexity = "Low"
-    if (hasLoops && hasNestedStructures) complexity = "High"
-    else if (hasLoops || hasNestedStructures) complexity = "Medium"
-
-    let readability = "Good"
-    if (hasBuiltins && !hasNestedStructures) readability = "Excellent"
-    else if (hasNestedStructures || lines > 10) readability = "Fair"
-
-    return { lines, complexity, readability, bigO }
+    return { timeComplexity, spaceComplexity, runtimePer1000 }
   }
 
   const generateImprovements = (originalCode: string, evolvedCode: string) => {
     const improvements = []
 
+    // Performance improvements
     if (evolvedCode.includes("reversed(") || evolvedCode.includes("[::-1]")) {
-      improvements.push("Uses built-in Python functions for better performance")
-    }
-    if (originalCode.split("\n").length > evolvedCode.split("\n").length) {
-      improvements.push("Reduced code length and complexity")
-    }
-    if (!evolvedCode.includes("for ") && originalCode.includes("for ")) {
-      improvements.push("Eliminated explicit loops for cleaner code")
-    }
-    if (evolvedCode.includes("return ") && evolvedCode.split("return ").length === 2) {
-      improvements.push("Simplified to single return statement")
+      improvements.push({
+        category: "Performance",
+        title: "Built-in Function Optimization",
+        description: "Leverages Python's optimized built-in functions instead of manual loops",
+        impact: "High",
+        icon: "⚡",
+      })
     }
 
-    return improvements.length > 0 ? improvements : ["Code structure optimized for better maintainability"]
+    // Code structure improvements
+    if (originalCode.split("\n").length > evolvedCode.split("\n").length) {
+      const reduction = Math.round(
+        ((originalCode.split("\n").length - evolvedCode.split("\n").length) / originalCode.split("\n").length) * 100,
+      )
+      improvements.push({
+        category: "Code Quality",
+        title: "Reduced Code Complexity",
+        description: `Simplified implementation with ${reduction}% fewer lines of code`,
+        impact: "Medium",
+        icon: "📝",
+      })
+    }
+
+    // Algorithm improvements
+    if (!evolvedCode.includes("for ") && originalCode.includes("for ")) {
+      improvements.push({
+        category: "Algorithm",
+        title: "Loop Elimination",
+        description: "Replaced explicit iteration with more efficient built-in operations",
+        impact: "High",
+        icon: "🔄",
+      })
+    }
+
+    // Memory efficiency
+    if (evolvedCode.includes("[::-1]") && originalCode.includes('""')) {
+      improvements.push({
+        category: "Memory",
+        title: "Memory Efficiency",
+        description: "Eliminated intermediate string concatenation, reducing memory overhead",
+        impact: "Medium",
+        icon: "💾",
+      })
+    }
+
+    // Pythonic improvements
+    if (evolvedCode.includes("return ") && evolvedCode.split("return ").length === 2) {
+      improvements.push({
+        category: "Best Practices",
+        title: "Pythonic Implementation",
+        description: "Follows Python idioms and conventions for cleaner, more readable code",
+        impact: "Medium",
+        icon: "🐍",
+      })
+    }
+
+    // Maintainability
+    if (evolvedCode.length < originalCode.length) {
+      improvements.push({
+        category: "Maintainability",
+        title: "Enhanced Maintainability",
+        description: "Simpler logic reduces debugging complexity and improves code maintainability",
+        impact: "Medium",
+        icon: "🔧",
+      })
+    }
+
+    return improvements.length > 0
+      ? improvements
+      : [
+          {
+            category: "Optimization",
+            title: "Code Structure Optimized",
+            description: "Enhanced code organization and structure for better maintainability",
+            impact: "Low",
+            icon: "✨",
+          },
+        ]
   }
 
   const createPrompt = (codeString: string) => {
-    return `You are an expert Python programmer. Your task is to take a given Python function and propose a functionally equivalent but more efficient and Pythonic version. Your goal is to dramatically improve the function's performance. **CRITICAL**: You must provide *only* the complete, new Python function in your response. Do not include any explanations, introductory text, or markdown formatting like \`\`\`python. Here is the function to improve:\n\`\`\`python\n${codeString}\n\`\`\``
+    return `You are an expert Python programmer and performance analyst. Your task is to:
+
+1. Take the given Python function and propose a functionally equivalent but more efficient and Pythonic version
+2. Analyze both the original and your improved version for:
+   - Time complexity (Big O notation)
+   - Space complexity (Big O notation)
+   - Estimated runtime per 1000 inputs
+
+Please provide your response in this exact format:
+
+IMPROVED_CODE:
+[Your optimized Python function here - no markdown formatting]
+
+ORIGINAL_ANALYSIS:
+Time Complexity: [Big O notation]
+Space Complexity: [Big O notation]
+Runtime per 1000 inputs: [estimate in milliseconds]
+
+IMPROVED_ANALYSIS:
+Time Complexity: [Big O notation]
+Space Complexity: [Big O notation]
+Runtime per 1000 inputs: [estimate in milliseconds]
+
+Here is the function to improve:
+\`\`\`python
+${codeString}
+\`\`\``
   }
 
   const getLlmSuggestion = async (apiKey: string, userCode: string) => {
@@ -153,13 +234,47 @@ export default function AICodeEvolver() {
       throw new Error("Invalid response from API.")
     }
 
-    const cleanedCode = data.candidates[0].content.parts[0].text
-      .trim()
-      .replace(/^```python\s*/, "")
-      .replace(/```$/, "")
-      .trim()
+    return data.candidates[0].content.parts[0].text.trim()
+  }
 
-    return cleanedCode
+  const parseGeminiResponse = (response: string) => {
+    const sections = response.split(/(?:IMPROVED_CODE:|ORIGINAL_ANALYSIS:|IMPROVED_ANALYSIS:)/)
+
+    let evolvedCode = ""
+    const originalAnalysis = { timeComplexity: "O(n)", spaceComplexity: "O(n)", runtimePer1000: "~5ms" }
+    const evolvedAnalysis = { timeComplexity: "O(n)", spaceComplexity: "O(1)", runtimePer1000: "~2ms" }
+
+    if (sections.length >= 2) {
+      evolvedCode = sections[1]
+        .trim()
+        .replace(/^```python\s*/, "")
+        .replace(/```$/, "")
+        .trim()
+    }
+
+    if (sections.length >= 3) {
+      const originalSection = sections[2].trim()
+      const timeMatch = originalSection.match(/Time Complexity:\s*([^\n]+)/)
+      const spaceMatch = originalSection.match(/Space Complexity:\s*([^\n]+)/)
+      const runtimeMatch = originalSection.match(/Runtime per 1000 inputs:\s*([^\n]+)/)
+
+      if (timeMatch) originalAnalysis.timeComplexity = timeMatch[1].trim()
+      if (spaceMatch) originalAnalysis.spaceComplexity = spaceMatch[1].trim()
+      if (runtimeMatch) originalAnalysis.runtimePer1000 = runtimeMatch[1].trim()
+    }
+
+    if (sections.length >= 4) {
+      const evolvedSection = sections[3].trim()
+      const timeMatch = evolvedSection.match(/Time Complexity:\s*([^\n]+)/)
+      const spaceMatch = evolvedSection.match(/Space Complexity:\s*([^\n]+)/)
+      const runtimeMatch = evolvedSection.match(/Runtime per 1000 inputs:\s*([^\n]+)/)
+
+      if (timeMatch) evolvedAnalysis.timeComplexity = timeMatch[1].trim()
+      if (spaceMatch) evolvedAnalysis.spaceComplexity = spaceMatch[1].trim()
+      if (runtimeMatch) evolvedAnalysis.runtimePer1000 = runtimeMatch[1].trim()
+    }
+
+    return { evolvedCode, originalAnalysis, evolvedAnalysis }
   }
 
   const handleEvolveClick = async () => {
@@ -174,16 +289,16 @@ export default function AICodeEvolver() {
     setComparison(null)
 
     try {
-      const evolved = await getLlmSuggestion(apiKey, userCode)
-      setEvolvedCode(evolved)
+      const response = await getLlmSuggestion(apiKey, userCode)
+      const { evolvedCode, originalAnalysis, evolvedAnalysis } = parseGeminiResponse(response)
 
-      const originalMetrics = analyzeCode(userCode)
-      const evolvedMetrics = analyzeCode(evolved)
-      const improvements = generateImprovements(userCode, evolved)
+      setEvolvedCode(evolvedCode)
+
+      const improvements = generateImprovements(userCode, evolvedCode)
 
       setComparison({
-        original: originalMetrics,
-        evolved: evolvedMetrics,
+        original: originalAnalysis,
+        evolved: evolvedAnalysis,
         improvements,
       })
 
@@ -288,12 +403,27 @@ export default function AICodeEvolver() {
           </div>
 
           {/* Evolution Controls */}
-          <div className="mt-8 text-center space-y-4">
-            <Button
+          <div className="mt-8 text-center space-y-4 bg-background p-8 rounded-lg">
+            <button
               onClick={handleEvolveClick}
               disabled={isLoading}
-              size="lg"
-              className="px-8 py-3 text-lg font-semibold"
+              className="inline-flex items-center justify-center px-8 py-3 text-lg font-semibold rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+              style={{
+                backgroundColor: "#1e293b",
+                color: "#ffffff",
+                border: "none",
+                boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+              }}
+              onMouseEnter={(e) => {
+                if (!isLoading) {
+                  e.currentTarget.style.backgroundColor = "#334155"
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isLoading) {
+                  e.currentTarget.style.backgroundColor = "#1e293b"
+                }
+              }}
             >
               {isLoading ? (
                 <>
@@ -307,11 +437,84 @@ export default function AICodeEvolver() {
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </>
               )}
-            </Button>
+            </button>
             <p className="text-muted-foreground font-medium">{status}</p>
           </div>
 
-          {/* Key Improvements Section */}
+          {/* Code Comparison & Improvements */}
+          {comparison && (
+            <div className="mt-12 space-y-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5" />
+                    Performance Analysis & Improvements
+                  </CardTitle>
+                  <CardDescription>
+                    Complexity and runtime analysis of your original code vs. AI-evolved version
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-8">
+                  {/* Performance Metrics Section */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                      Performance Metrics
+                    </h4>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <Activity className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm font-medium">Time Complexity</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-xs font-mono">
+                            {comparison.original.timeComplexity}
+                          </Badge>
+                          <ArrowRight className="w-3 h-3 text-muted-foreground" />
+                          <Badge variant="default" className="text-xs font-mono">
+                            {comparison.evolved.timeComplexity}
+                          </Badge>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <MemoryStick className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm font-medium">Space Complexity</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-xs font-mono">
+                            {comparison.original.spaceComplexity}
+                          </Badge>
+                          <ArrowRight className="w-3 h-3 text-muted-foreground" />
+                          <Badge variant="default" className="text-xs font-mono">
+                            {comparison.evolved.spaceComplexity}
+                          </Badge>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm font-medium">Runtime/1000 inputs</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-xs">
+                            {comparison.original.runtimePer1000}
+                          </Badge>
+                          <ArrowRight className="w-3 h-3 text-muted-foreground" />
+                          <Badge variant="default" className="text-xs">
+                            {comparison.evolved.runtimePer1000}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Key Improvements Section */}
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
@@ -389,6 +592,7 @@ export default function AICodeEvolver() {
           )}
         </div>
       </section>
+
       <Separator className="my-16" />
 
       {/* Footer */}
