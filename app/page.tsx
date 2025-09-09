@@ -6,7 +6,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { Code2, Sparkles, Zap, ArrowRight, Github, Linkedin } from "lucide-react"
+import {
+  Code2,
+  Sparkles,
+  Zap,
+  ArrowRight,
+  Github,
+  Linkedin,
+  Clock,
+  FileText,
+  TrendingUp,
+  CheckCircle,
+  Activity,
+} from "lucide-react"
 
 export default function AICodeEvolver() {
   const apiKey = "AIzaSyAvSu5-5RGWOBR0LT2p_79v0cZxxThGR-M"
@@ -18,6 +30,89 @@ export default function AICodeEvolver() {
   const [evolvedCode, setEvolvedCode] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [status, setStatus] = useState("Ready to evolve your code")
+  const [comparison, setComparison] = useState<{
+    original: { lines: number; complexity: string; readability: string; bigO: string }
+    evolved: { lines: number; complexity: string; readability: string; bigO: string }
+    improvements: string[]
+  } | null>(null)
+
+  const analyzeBigO = (code: string): string => {
+    const codeLines = code.toLowerCase()
+
+    // Check for nested loops
+    const nestedLoopPattern = /for\s+.*:\s*[\s\S]*?for\s+.*:|while\s+.*:\s*[\s\S]*?while\s+.*:/
+    if (nestedLoopPattern.test(codeLines)) {
+      return "O(n²)"
+    }
+
+    // Check for triple nested structures
+    const tripleNestedPattern = /for\s+.*:\s*[\s\S]*?for\s+.*:\s*[\s\S]*?for\s+.*:/
+    if (tripleNestedPattern.test(codeLines)) {
+      return "O(n³)"
+    }
+
+    // Check for single loops
+    if (/for\s+.*:|while\s+.*:/.test(codeLines)) {
+      return "O(n)"
+    }
+
+    // Check for recursive patterns
+    if (
+      codeLines.includes("def ") &&
+      new RegExp(codeLines.match(/def\s+(\w+)/)?.[1] || "").test(codeLines.slice(codeLines.indexOf("def")))
+    ) {
+      return "O(n)"
+    }
+
+    // Check for built-in operations
+    if (/\.sort\(|sorted\(/.test(codeLines)) {
+      return "O(n log n)"
+    }
+
+    if (/\.reverse\(|reversed\(|\[::-1\]|\.join\(/.test(codeLines)) {
+      return "O(n)"
+    }
+
+    // Default to constant time for simple operations
+    return "O(1)"
+  }
+
+  const analyzeCode = (code: string) => {
+    const lines = code.trim().split("\n").length
+    const hasLoops = /for\s+|while\s+/.test(code)
+    const hasNestedStructures = code.split("\n").some((line) => line.match(/^\s{4,}/))
+    const hasBuiltins = /\.join\(|\.reverse\(|reversed\(|list\(/.test(code)
+    const bigO = analyzeBigO(code)
+
+    let complexity = "Low"
+    if (hasLoops && hasNestedStructures) complexity = "High"
+    else if (hasLoops || hasNestedStructures) complexity = "Medium"
+
+    let readability = "Good"
+    if (hasBuiltins && !hasNestedStructures) readability = "Excellent"
+    else if (hasNestedStructures || lines > 10) readability = "Fair"
+
+    return { lines, complexity, readability, bigO }
+  }
+
+  const generateImprovements = (originalCode: string, evolvedCode: string) => {
+    const improvements = []
+
+    if (evolvedCode.includes("reversed(") || evolvedCode.includes("[::-1]")) {
+      improvements.push("Uses built-in Python functions for better performance")
+    }
+    if (originalCode.split("\n").length > evolvedCode.split("\n").length) {
+      improvements.push("Reduced code length and complexity")
+    }
+    if (!evolvedCode.includes("for ") && originalCode.includes("for ")) {
+      improvements.push("Eliminated explicit loops for cleaner code")
+    }
+    if (evolvedCode.includes("return ") && evolvedCode.split("return ").length === 2) {
+      improvements.push("Simplified to single return statement")
+    }
+
+    return improvements.length > 0 ? improvements : ["Code structure optimized for better maintainability"]
+  }
 
   const createPrompt = (codeString: string) => {
     return `You are an expert Python programmer. Your task is to take a given Python function and propose a functionally equivalent but more efficient and Pythonic version. Your goal is to dramatically improve the function's performance. **CRITICAL**: You must provide *only* the complete, new Python function in your response. Do not include any explanations, introductory text, or markdown formatting like \`\`\`python. Here is the function to improve:\n\`\`\`python\n${codeString}\n\`\`\``
@@ -58,7 +153,6 @@ export default function AICodeEvolver() {
       throw new Error("Invalid response from API.")
     }
 
-    // Clean the response to remove markdown
     const cleanedCode = data.candidates[0].content.parts[0].text
       .trim()
       .replace(/^```python\s*/, "")
@@ -77,10 +171,22 @@ export default function AICodeEvolver() {
     setIsLoading(true)
     setStatus("Connecting to Gemini AI...")
     setEvolvedCode("")
+    setComparison(null)
 
     try {
       const evolved = await getLlmSuggestion(apiKey, userCode)
       setEvolvedCode(evolved)
+
+      const originalMetrics = analyzeCode(userCode)
+      const evolvedMetrics = analyzeCode(evolved)
+      const improvements = generateImprovements(userCode, evolved)
+
+      setComparison({
+        original: originalMetrics,
+        evolved: evolvedMetrics,
+        improvements,
+      })
+
       setStatus("Evolution complete! 🎉")
     } catch (error) {
       setStatus(`Error: ${error instanceof Error ? error.message : "Unknown error"}`)
@@ -204,6 +310,112 @@ export default function AICodeEvolver() {
             </Button>
             <p className="text-muted-foreground font-medium">{status}</p>
           </div>
+
+          {/* Code Comparison & Improvements */}
+          {comparison && (
+            <div className="mt-12">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5" />
+                    Code Comparison & Improvements
+                  </CardTitle>
+                  <CardDescription>Analysis of your original code vs. AI-evolved version</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Metrics Comparison */}
+                    <div className="space-y-4">
+                      <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                        Code Metrics
+                      </h4>
+
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <FileText className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm">Lines of Code</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs">
+                              {comparison.original.lines}
+                            </Badge>
+                            <ArrowRight className="w-3 h-3 text-muted-foreground" />
+                            <Badge variant="default" className="text-xs">
+                              {comparison.evolved.lines}
+                            </Badge>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <Zap className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm">Complexity</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs">
+                              {comparison.original.complexity}
+                            </Badge>
+                            <ArrowRight className="w-3 h-3 text-muted-foreground" />
+                            <Badge variant="default" className="text-xs">
+                              {comparison.evolved.complexity}
+                            </Badge>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm">Readability</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs">
+                              {comparison.original.readability}
+                            </Badge>
+                            <ArrowRight className="w-3 h-3 text-muted-foreground" />
+                            <Badge variant="default" className="text-xs">
+                              {comparison.evolved.readability}
+                            </Badge>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <Activity className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm">Time Complexity</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs font-mono">
+                              {comparison.original.bigO}
+                            </Badge>
+                            <ArrowRight className="w-3 h-3 text-muted-foreground" />
+                            <Badge variant="default" className="text-xs font-mono">
+                              {comparison.evolved.bigO}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Improvements List */}
+                    <div className="md:col-span-2 space-y-4">
+                      <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                        Key Improvements
+                      </h4>
+                      <div className="space-y-2">
+                        {comparison.improvements.map((improvement, index) => (
+                          <div key={index} className="flex items-start gap-3 p-3 bg-accent/10 rounded-lg">
+                            <CheckCircle className="w-4 h-4 text-accent mt-0.5 flex-shrink-0" />
+                            <span className="text-sm text-foreground">{improvement}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
       </section>
 
