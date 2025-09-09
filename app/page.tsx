@@ -461,13 +461,13 @@ ${codeString}
                       Performance Metrics
                     </h4>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                      <div className="flex flex-col gap-3 p-4 bg-muted/50 rounded-lg">
                         <div className="flex items-center gap-2">
                           <Activity className="w-4 h-4 text-muted-foreground" />
                           <span className="text-sm font-medium">Time Complexity</span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-center gap-2">
                           <Badge variant="outline" className="text-xs font-mono">
                             {comparison.original.timeComplexity}
                           </Badge>
@@ -478,35 +478,69 @@ ${codeString}
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                      <div className="flex flex-col gap-3 p-4 bg-muted/50 rounded-lg">
                         <div className="flex items-center gap-2">
                           <MemoryStick className="w-4 h-4 text-muted-foreground" />
                           <span className="text-sm font-medium">Space Complexity</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs font-mono">
-                            {comparison.original.spaceComplexity}
-                          </Badge>
-                          <ArrowRight className="w-3 h-3 text-muted-foreground" />
-                          <Badge variant="default" className="text-xs font-mono">
-                            {comparison.evolved.spaceComplexity}
-                          </Badge>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">Original:</span>
+                            <Badge
+                              variant="outline"
+                              className="text-xs font-mono max-w-full truncate"
+                              title={comparison.original.spaceComplexity}
+                            >
+                              {comparison.original.spaceComplexity.length > 15
+                                ? comparison.original.spaceComplexity.substring(0, 15) + "..."
+                                : comparison.original.spaceComplexity}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">Evolved:</span>
+                            <Badge
+                              variant="default"
+                              className="text-xs font-mono max-w-full truncate"
+                              title={comparison.evolved.spaceComplexity}
+                            >
+                              {comparison.evolved.spaceComplexity.length > 15
+                                ? comparison.evolved.spaceComplexity.substring(0, 15) + "..."
+                                : comparison.evolved.spaceComplexity}
+                            </Badge>
+                          </div>
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                      <div className="flex flex-col gap-3 p-4 bg-muted/50 rounded-lg">
                         <div className="flex items-center gap-2">
                           <Clock className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-sm font-medium">Runtime/1000 inputs</span>
+                          <span className="text-sm font-medium">Runtime/1000</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs">
-                            {comparison.original.runtimePer1000}
-                          </Badge>
-                          <ArrowRight className="w-3 h-3 text-muted-foreground" />
-                          <Badge variant="default" className="text-xs">
-                            {comparison.evolved.runtimePer1000}
-                          </Badge>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground w-12 flex-shrink-0">Orig:</span>
+                            <Badge
+                              variant="outline"
+                              className="text-xs font-mono flex-1 truncate"
+                              title={comparison.original.runtimePer1000}
+                            >
+                              {comparison.original.runtimePer1000.length > 12
+                                ? comparison.original.runtimePer1000.substring(0, 12) + "..."
+                                : comparison.original.runtimePer1000}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground w-12 flex-shrink-0">Evol:</span>
+                            <Badge
+                              variant="default"
+                              className="text-xs font-mono flex-1 truncate"
+                              title={comparison.evolved.runtimePer1000}
+                            >
+                              {comparison.evolved.runtimePer1000.length > 12
+                                ? comparison.evolved.runtimePer1000.substring(0, 12) + "..."
+                                : comparison.evolved.runtimePer1000}
+                            </Badge>
+                          </div>
                         </div>
                       </div>
                     </div>
