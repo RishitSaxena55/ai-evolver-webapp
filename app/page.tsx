@@ -24,7 +24,7 @@ export default function AICodeEvolver() {
   }
 
   const getLlmSuggestion = async (apiKey: string, userCode: string) => {
-    const model = "gemini-2.0-flash-thinking-exp"
+    const model = "gemini-2.5-flash-lite"
     const apiURL = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
     const prompt = createPrompt(userCode)
     const payload = {
